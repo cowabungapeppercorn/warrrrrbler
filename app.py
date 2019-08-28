@@ -5,8 +5,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
-from models import db, connect_db, User, Message
-
+from models import db, connect_db, User, Message, Like
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
@@ -118,6 +117,7 @@ def logout():
 ##############################################################################
 # General user routes:
 
+
 @app.route('/users')
 def list_users():
     """Page with listing of users.
@@ -126,7 +126,8 @@ def list_users():
     """
 
     search = request.args.get('q')
-
+    import pdb
+    pdb.set_trace()
     if not search:
         users = User.query.all()
     else:
@@ -203,7 +204,7 @@ def stop_following(follow_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
-    
+
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
@@ -223,7 +224,7 @@ def profile():
             g.user.header_image_url = form.header_image_url.data
             g.user.bio = form.bio.data
             g.user.location = form.location.data
-        
+
             db.session.add(g.user)
             db.session.commit()
 
@@ -231,9 +232,11 @@ def profile():
             return redirect("/")
         else:
             flash("Incorrect Password", "danger")
-            return render_template("/users/edit.html", form=form, user_id=g.user.id)
+            return render_template("/users/edit.html", form=form,
+                                   user_id=g.user.id)
     else:
-        return render_template("/users/edit.html", form=form, user_id=g.user.id)
+        return render_template("/users/edit.html", form=form,
+                               user_id=g.user.id)
 
 
 @app.route('/users/delete', methods=["POST"])
@@ -250,6 +253,19 @@ def delete_user():
     db.session.commit()
 
     return redirect("/signup")
+
+
+@app.route('/like', methods=["POST"])
+def like_message():
+    """Let a user like/unlike a message"""
+    new_like = Like()
+    new_like.user_id = g.user.id
+    new_like.message_id = request.form.get("msg_id")
+
+    db.session.add(new_like)
+    db.session.commit()
+
+    return redirect(request.referrer)
 
 
 ##############################################################################
@@ -312,9 +328,8 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
-    following_ids = [u.id for u in g.user.following]
-
     if g.user:
+        following_ids = [u.id for u in g.user.following]
         messages = (Message
                     .query
                     .filter(Message.user_id.in_(following_ids))
