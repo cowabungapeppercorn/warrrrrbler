@@ -252,29 +252,32 @@ def delete_user():
     return redirect("/signup")
 
 
-@app.route('/like', methods=["POST"])
-def like_message():
+@app.route('/like/<int:msg_id>', methods=["POST"])
+def like_message(msg_id):
     """Let a user like a warbler"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
 
     new_like = Like()
     new_like.user_id = g.user.id
-    new_like.message_id = request.form.get("msg_id")
+    new_like.message_id = msg_id
 
     db.session.add(new_like)
     db.session.commit()
 
     return redirect(request.referrer)
 
-@app.route('/unlike', methods=["POST"])
-def unlike_message():
+@app.route('/unlike/<int:msg_id>', methods=["POST"])
+def unlike_message(msg_id):
     """Let a user unlike a warbler"""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    message_id = request.form.get("msg_id")
-    unliked_message = Like.query.filter(Like.message_id == message_id)\
+    unliked_message = Like.query.filter(Like.message_id == msg_id)\
         .filter(Like.user_id == g.user.id).first()
 
     db.session.delete(unliked_message)
@@ -285,7 +288,7 @@ def unlike_message():
 @app.route('/users/<int:user_id>/likes')
 def show_liked_messages(user_id):
     """Show messages that have been liked."""
-    
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")

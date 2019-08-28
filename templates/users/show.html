@@ -16,14 +16,15 @@
         <a href="/users/{{ user.id }}">@{{ user.username }}</a>
         <span class="text-muted">{{ message.timestamp.strftime('%d %B %Y') }}</span>
         <p>{{ message.text }}</p>
+        
         {% if message.user_id != g.user.id %}
         {% if message in g.user.liked_messages %}
-        <form action="/unlike" method="POST">
+        <form action="/unlike/{{message.id}}" method="POST">
           <input type="hidden" name="msg_id" value="{{ message.id }}">
           <input class="btn btn-outline-primary" type="submit" value="UnLike">
         </form>
         {% else %}
-        <form action="/like" method="POST">
+        <form action="/like/{{message.id}}" method="POST">
           <input type="hidden" name="msg_id" value="{{ message.id }}">
           <input class="btn btn-primary" type="submit" value="Like">
         </form>
