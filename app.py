@@ -126,8 +126,6 @@ def list_users():
     """
 
     search = request.args.get('q')
-    import pdb
-    pdb.set_trace()
     if not search:
         users = User.query.all()
     else:
@@ -139,7 +137,6 @@ def list_users():
 @app.route('/users/<int:user_id>')
 def users_show(user_id):
     """Show user profile."""
-
     user = User.query.get_or_404(user_id)
     # snagging messages in order from the database;
     # user.messages won't be in order by default
@@ -257,7 +254,8 @@ def delete_user():
 
 @app.route('/like', methods=["POST"])
 def like_message():
-    """Let a user like/unlike a message"""
+    """Let a user like a warbler"""
+
     new_like = Like()
     new_like.user_id = g.user.id
     new_like.message_id = request.form.get("msg_id")
@@ -266,6 +264,40 @@ def like_message():
     db.session.commit()
 
     return redirect(request.referrer)
+
+@app.route('/unlike', methods=["POST"])
+def unlike_message():
+    """Let a user unlike a warbler"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message_id = request.form.get("msg_id")
+    unliked_message = Like.query.filter(Like.message_id == message_id)\
+        .filter(Like.user_id == g.user.id).first()
+
+    db.session.delete(unliked_message)
+    db.session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/users/<int:user_id>/likes')
+def show_liked_messages(user_id):
+    """Show messages that have been liked."""
+    
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    message_id = [m.id for m in g.user.liked_messages]
+    messages = (Message
+                .query
+                .filter(Message.id.in_(message_id))
+                .order_by(Message.timestamp.desc())
+                .limit(100)
+                .all())
+    return render_template('users/likes.html', user=g.user, messages=messages)
 
 
 ##############################################################################

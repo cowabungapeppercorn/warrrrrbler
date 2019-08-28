@@ -124,8 +124,11 @@ class Message(db.Model):
     __tablename__ = 'messages'
 
     id = db.Column(db.Integer, primary_key=True)
+
     text = db.Column(db.String(140), nullable=False)
+
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
+    
     user_id = db.Column(db.Integer, db.ForeignKey('users.id',
                         ondelete='CASCADE'), nullable=False)
 
@@ -147,7 +150,6 @@ class Like(db.Model):
 
     __tablename__ = 'likes'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'),
-                        primary_key=True)
-    message_id = db.Column(db.Integer, db.ForeignKey('messages.id'),
-                           primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
