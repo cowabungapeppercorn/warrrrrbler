@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UserEditForm
 from models import db, connect_db, User, Message
 
 CURR_USER_KEY = "curr_user"
@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 toolbar = DebugToolbarExtension(app)
 
@@ -66,7 +66,7 @@ def signup():
     """
 
     form = UserAddForm()
-
+    # import pdb; pdb.set_trace()
     if form.validate_on_submit():
         try:
             user = User.signup(
@@ -94,7 +94,6 @@ def login():
     """Handle user login."""
 
     form = LoginForm()
-
     if form.validate_on_submit():
         user = User.authenticate(form.username.data,
                                  form.password.data)
@@ -112,9 +111,9 @@ def login():
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
-
-    # IMPLEMENT THIS
-
+    do_logout()
+    flash("You are logged out")
+    return redirect("/login")
 
 ##############################################################################
 # General user routes:
@@ -141,7 +140,6 @@ def users_show(user_id):
     """Show user profile."""
 
     user = User.query.get_or_404(user_id)
-
     # snagging messages in order from the database;
     # user.messages won't be in order by default
     messages = (Message
@@ -205,13 +203,37 @@ def stop_following(follow_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
-
+    
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UserEditForm(obj=g.user)
+
+    if form.validate_on_submit():
+        if User.authenticate(g.user.username, form.password.data):
+            g.user.username = form.username.data
+            g.user.email = form.email.data
+            g.user.image_url = form.image_url.data
+            g.user.header_image_url = form.header_image_url.data
+            g.user.bio = form.bio.data
+            g.user.location = form.location.data
+        
+            db.session.add(g.user)
+            db.session.commit()
+
+            flash(f"{g.user.username} successfully edited")
+            return redirect("/")
+        else:
+            flash("Incorrect Password", "danger")
+            return render_template("/users/edit.html", form=form, user_id=g.user.id)
+    else:
+        return render_template("/users/edit.html", form=form, user_id=g.user.id)
 
 
 @app.route('/users/delete', methods=["POST"])
@@ -290,10 +312,12 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
+    following_ids = [u.id for u in g.user.following]
 
     if g.user:
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
