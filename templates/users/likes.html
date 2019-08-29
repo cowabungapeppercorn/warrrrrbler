@@ -51,7 +51,7 @@
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
               <p>{{ msg.text }}</p>
-              <form action="/unlike" method="POST">
+              <form action="/unlike/{{msg.id}}" method="POST">
                 <input type="hidden" name="msg_id" value="{{ msg.id }}">
                 <input type="submit" value="Unlike">
               </form>
