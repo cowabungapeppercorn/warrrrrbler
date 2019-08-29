@@ -7,7 +7,7 @@
 
 import os
 from unittest import TestCase
-
+from sqlalchemy.exc import IntegrityError
 from models import db, User, Message, Follows
 
 # BEFORE we import our app, let's set an environmental variable
@@ -39,20 +39,96 @@ class UserModelTestCase(TestCase):
         Message.query.delete()
         Follows.query.delete()
 
-        self.client = app.test_client()
-
-    def test_user_model(self):
-        """Does basic model work?"""
-
         u = User(
             email="test@test.com",
             username="testuser",
             password="HASHED_PASSWORD"
         )
 
+        cp = User(
+            email="cow@pep.corn",
+            username="cowabunga",
+            password="peppercorn"
+        )
+
         db.session.add(u)
+        db.session.add(cp)
         db.session.commit()
+
+        self.client = app.test_client()
+
+    def tearDown(self):
+        """Remove all db data"""
+        db.session.rollback()
+
+    def test_user_model(self):
+        """Does basic model work?"""
+
+        users = User.query.all()
+        u = User.query.filter(User.username == 'testuser').first()
 
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
         self.assertEqual(len(u.followers), 0)
+
+        self.assertIn(u, users)
+        self.assertEqual(len(users), 2)
+
+    def test_repr(self):
+        """Does repr return what we want?"""
+
+        cow = User.query.filter(User.username == 'cowabunga').first()
+
+        self.assertEqual(f'{cow}', f'<User #{cow.id}: cowabunga, cow@pep.corn>')
+        self.assertNotEqual(f'{cow}', '<User #51517: user, user@user.user')
+
+    def test_is_following_and_followers(self):
+        """Does is_following detect following relationship"""
+        u = User.query.filter(User.username == 'testuser').first()
+        cow = User.query.filter(User.username == 'cowabunga').first()
+
+        follower = Follows(
+            user_being_followed_id=cow.id,
+            user_following_id=u.id
+        )
+
+        db.session.add(follower)
+        db.session.commit()
+
+        self.assertEqual(u.following, [cow])
+        self.assertNotEqual(cow.following, [u])
+        self.assertEqual(cow.followers, [u])
+        self.assertNotEqual(u.followers, [cow])
+
+    def test_User_signup_method(self):
+        """Test that User.signup creates a valid user w/ valid credentials"""
+        User.signup('new_user', 'email@email.mail', 'passhword', 'picshure.pic')
+        db.session.commit()
+        users = User.query.all()
+
+        self.assertEqual(len(users), 3)
+
+    def test_cant_create_duplicate_user(self):
+        """Test that you cant create user with duplicate username"""
+        with self.assertRaises(IntegrityError):
+
+            User.signup('testuser', 'email.com', 'pass', 'somethiß')
+            db.session.commit()
+
+    def test_authenticate_valid_user(self):
+        """Test that authenticate will return user repr for valid user"""
+        test1 = User.signup('test', 'email.com', 'password1', 'pic.url')
+        db.session.commit()
+        test2 = User.authenticate('test', 'password1')
+
+        self.assertEqual(test1, test2)
+
+    def test_authentication_invalid(self):
+        """Test that authentication fails on invalid username or password"""
+        User.signup('test', 'email.com', 'password1', 'pic.url')
+        db.session.commit()
+        test2 = User.authenticate('fail', 'password1')
+        test3 = User.authenticate('test', 'badword')
+
+        self.assertEqual(test2, False)
+        self.assertEqual(test3, False)
