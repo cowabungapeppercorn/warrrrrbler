@@ -20,15 +20,19 @@
         {% if message.user_id != g.user.id %}
         {% if message in g.user.liked_messages %}
         <form action="/unlike/{{message.id}}" method="POST">
-          <input type="hidden" name="msg_id" value="{{ message.id }}">
           <input class="btn btn-outline-primary" type="submit" value="UnLike">
         </form>
         {% else %}
         <form action="/like/{{message.id}}" method="POST">
-          <input type="hidden" name="msg_id" value="{{ message.id }}">
+
           <input class="btn btn-primary" type="submit" value="Like">
         </form>
         {% endif %}
+        {% else %}
+        <form action="/messages/{{message.id}}/delete" method="POST">
+          <input class="btn btn-danger" type="submit" value="Delete">
+        </form>
+
         {% endif %}
 
       </div>
