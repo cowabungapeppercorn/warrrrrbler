@@ -7,7 +7,7 @@
 
 import os
 from unittest import TestCase
-
+from psycopg2 import IntegrityError
 from models import db, connect_db, Message, User
 
 # BEFORE we import our app, let's set an environmental variable
@@ -49,10 +49,19 @@ class MessageViewTestCase(TestCase):
                                     password="testuser",
                                     image_url=None)
 
+        self.othertester = User.signup(username="testing",
+                            email="test@testp.com",
+                            password="testuser",
+                            image_url=None)
+
         db.session.commit()
 
+    def tearDown(self):
+        """Remove all db data"""
+        db.session.rollback()
+
     def test_add_message(self):
-        """Can use add a message?"""
+        """Can user add a message?"""
 
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
@@ -71,3 +80,80 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_user_auth_add_message(self):
+        "Can a non-user add a message?"
+        with self.client as c:
+
+            resp = c.post("/messages/new", data={"text": "Hello"},
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            messages = Message.query.all()
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(len(messages), 0)
+            self.assertIn('<h4>New to Warbler?</h4>', html)
+
+    def test_user_auth_delete_message(self):
+        "Can a non-user delete a message?"
+        with self.client as c:
+            otheruser = User.query.filter(User.username == "testing").first()
+            new_message = Message(text="Whatevas", user_id=otheruser.id)
+            
+            db.session.add(new_message)
+            db.session.commit()
+
+            resp = c.post(f"/messages/{new_message.id}/delete",
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            messages = Message.query.all()
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(len(messages), 1)
+            self.assertIn('<h4>New to Warbler?</h4>', html)
+
+    def test_user_delete_message(self):
+        """Can the user delete their own message?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            c.post("/messages/new", data={"text": "Hello"})
+
+            message = Message.query.first()
+
+            resp = c.post(f"/messages/{message.id}/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            messages = Message.query.all()
+
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(len(messages), 0)
+            self.assertIn('col-sm-6', html)
+
+    def test_other_user_delete_message(self):
+        """Can a user who is not the creator delete a message?"""
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            otheruser = User.query.filter(User.username == "testing").first()
+            new_message = Message(text="Whatevas", user_id=otheruser.id)
+
+            db.session.add(new_message)
+            db.session.commit()
+
+            resp = c.post(f"/messages/{new_message.id}/delete", follow_redirects=True)
+
+            messages = Message.query.all()
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertEqual(len(messages), 1)
+            self.assertIn('col-md-8', html)
+
