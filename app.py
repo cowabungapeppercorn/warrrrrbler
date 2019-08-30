@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
@@ -82,7 +82,7 @@ def signup():
 
         do_login(user)
 
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     else:
         return render_template('users/signup.html', form=form)
@@ -100,7 +100,7 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect("/")
+            return redirect(url_for('homepage'))
 
         flash("Invalid credentials.", 'danger')
 
@@ -112,7 +112,7 @@ def logout():
     """Handle logout of user."""
     do_logout()
     flash("You are logged out")
-    return redirect("/login")
+    return redirect(url_for('login'))
 
 ##############################################################################
 # General user routes:
@@ -155,7 +155,7 @@ def show_following(user_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
@@ -167,7 +167,7 @@ def users_followers(user_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html', user=user)
@@ -179,13 +179,13 @@ def add_follow(follow_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+    return redirect(url_for('show_following', user_id = g.user.id))
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
@@ -194,7 +194,7 @@ def stop_following(follow_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     followed_user = User.query.get(follow_id)
     g.user.following.remove(followed_user)
@@ -209,7 +209,7 @@ def profile():
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     form = UserEditForm(obj=g.user)
 
@@ -226,7 +226,7 @@ def profile():
             db.session.commit()
 
             flash(f"{g.user.username} successfully edited")
-            return redirect("/")
+            return redirect(url_for('homepage'))
         else:
             flash("Incorrect Password", "danger")
             return render_template("/users/edit.html", form=form,
@@ -242,7 +242,7 @@ def delete_user():
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     do_logout()
 
@@ -258,7 +258,7 @@ def like_message(msg_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     new_like = Like()
     new_like.user_id = g.user.id
@@ -275,7 +275,7 @@ def unlike_message(msg_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     unliked_message = Like.query.filter(Like.message_id == msg_id)\
         .filter(Like.user_id == g.user.id).first()
@@ -291,7 +291,7 @@ def show_liked_messages(user_id):
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     user = User.query.get_or_404(user_id)
     message_id = [m.id for m in user.liked_messages]
@@ -316,7 +316,7 @@ def messages_add():
 
     if not g.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     form = MessageForm()
 
@@ -346,7 +346,7 @@ def messages_destroy(message_id):
 
     if g.user is not msg.user:
         flash("Access unauthorized.", "danger")
-        return redirect("/")
+        return redirect(url_for('homepage'))
 
     db.session.delete(msg)
     db.session.commit()
@@ -396,3 +396,7 @@ def add_header(req):
     req.headers["Expires"] = "0"
     req.headers['Cache-Control'] = 'public, max-age=0'
     return req
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404

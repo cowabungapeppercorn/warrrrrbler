@@ -535,3 +535,27 @@ p.card-bio {
 .message-404 .form-inline input {
   flex: 1;
 }
+
+
+/* =========================== 404 page stuff */
+
+.bird404 {
+  background-image: url("../images/gold-finch.jpg");
+  background-size: cover;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.text404{
+  text-align: center;
+}
+
+.divie {
+  z-index: 1;
+  position: relative;
+}
