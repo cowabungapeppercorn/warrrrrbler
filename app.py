@@ -325,7 +325,7 @@ def messages_add():
         g.user.messages.append(msg)
         db.session.commit()
 
-        return redirect(f"/users/{g.user.id}")
+        return redirect(url_for('users_show', user_id=g.user.id))
 
     return render_template('messages/new.html', form=form)
 
@@ -351,7 +351,7 @@ def messages_destroy(message_id):
     db.session.delete(msg)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}")
+    return redirect(url_for('users_show', user_id=g.user.id))
 
 
 ##############################################################################
