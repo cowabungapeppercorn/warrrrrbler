@@ -68,7 +68,7 @@ class MessageModelTestCase(TestCase):
         db.session.add(new_message)
         db.session.commit()
 
-        self.assertEqual(len(Message.query.all()), 1)
+        self.assertEqual(Message.query.count(), 1)
         
     def test_relationship_of_messages_and_user(self):
         """Can we access the user from the message?"""
@@ -88,8 +88,7 @@ class MessageModelTestCase(TestCase):
             db.session.add(fail_message)
             db.session.commit()
 
-            messages = Message.query.all()
-            self.assertEqual(len(messages), 0)
+            self.assertEqual(Message.query.count(), 0)
 
     def test_fail_to_create_message_text_error(self):
         """If we fail to put in the text required does the message still get created?"""
@@ -100,5 +99,4 @@ class MessageModelTestCase(TestCase):
             db.session.add(fail_message)
             db.session.commit()
 
-            messages = Message.query.all()
-            self.assertEqual(len(messages), 0)
+            self.assertEqual(Message.query.count(), 0)

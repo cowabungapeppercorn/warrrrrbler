@@ -127,8 +127,9 @@ class Message(db.Model):
 
     text = db.Column(db.String(140), nullable=False)
 
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow())
-    
+    timestamp = db.Column(db.DateTime, nullable=False,
+                          default=datetime.utcnow())
+
     user_id = db.Column(db.Integer, db.ForeignKey('users.id',
                         ondelete='CASCADE'), nullable=False)
 

@@ -55,6 +55,9 @@ class UserModelTestCase(TestCase):
         db.session.add(cp)
         db.session.commit()
 
+        self.user1 = u
+        self.user2 = cp
+
         self.client = app.test_client()
 
     def tearDown(self):
@@ -65,7 +68,7 @@ class UserModelTestCase(TestCase):
         """Does basic model work?"""
 
         users = User.query.all()
-        u = User.query.filter(User.username == 'testuser').first()
+        u = User.query.filter(User.username == self.user1.username).first()
 
         # User should have no messages & no followers
         self.assertEqual(len(u.messages), 0)
@@ -77,15 +80,15 @@ class UserModelTestCase(TestCase):
     def test_repr(self):
         """Does repr return what we want?"""
 
-        cow = User.query.filter(User.username == 'cowabunga').first()
+        cow = User.query.filter(User.username == self.user2.username).first()
 
         self.assertEqual(f'{cow}', f'<User #{cow.id}: cowabunga, cow@pep.corn>')
         self.assertNotEqual(f'{cow}', '<User #51517: user, user@user.user')
 
     def test_is_following_and_followers(self):
         """Does is_following detect following relationship"""
-        u = User.query.filter(User.username == 'testuser').first()
-        cow = User.query.filter(User.username == 'cowabunga').first()
+        u = User.query.filter(User.username == self.user1.username).first()
+        cow = User.query.filter(User.username == self.user2.username).first()
 
         follower = Follows(
             user_being_followed_id=cow.id,
@@ -99,6 +102,10 @@ class UserModelTestCase(TestCase):
         self.assertNotEqual(cow.following, [u])
         self.assertEqual(cow.followers, [u])
         self.assertNotEqual(u.followers, [cow])
+        self.assertEqual(u.is_following(cow), True)
+        self.assertEqual(cow.is_following(u), False)
+        self.assertEqual(u.is_followed_by(cow), False)
+        self.assertEqual(cow.is_followed_by(u), True)
 
     def test_User_signup_method(self):
         """Test that User.signup creates a valid user w/ valid credentials"""
@@ -112,7 +119,7 @@ class UserModelTestCase(TestCase):
         """Test that you cant create user with duplicate username"""
         with self.assertRaises(IntegrityError):
 
-            User.signup('testuser', 'email.com', 'pass', 'somethiß')
+            User.signup(self.user1.username, 'email.com', 'pass', 'somethiß')
             db.session.commit()
 
     def test_authenticate_valid_user(self):

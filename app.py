@@ -293,7 +293,8 @@ def show_liked_messages(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    message_id = [m.id for m in g.user.liked_messages]
+    user = User.query.get_or_404(user_id)
+    message_id = [m.id for m in user.liked_messages]
     messages = (Message
                 .query
                 .filter(Message.id.in_(message_id))
