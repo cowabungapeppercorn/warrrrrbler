@@ -42,7 +42,7 @@ class User(db.Model):
     location = db.Column(db.Text)
     password = db.Column(db.Text, nullable=False)
 
-    messages = db.relationship('Message')
+    messages = db.relationship('Message', cascade="all, delete")
 
     liked_messages = db.relationship('Message', secondary='likes',
                                      backref='users_liked_by')
@@ -152,5 +152,5 @@ class Like(db.Model):
     __tablename__ = 'likes'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    message_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id', ondelete="cascade"))

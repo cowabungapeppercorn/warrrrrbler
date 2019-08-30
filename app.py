@@ -185,7 +185,7 @@ def add_follow(follow_id):
     g.user.following.append(followed_user)
     db.session.commit()
 
-    return redirect(url_for('show_following', user_id = g.user.id))
+    return redirect(url_for('show_following', user_id=g.user.id))
 
 
 @app.route('/users/stop-following/<int:follow_id>', methods=['POST'])
@@ -200,7 +200,7 @@ def stop_following(follow_id):
     g.user.following.remove(followed_user)
     db.session.commit()
 
-    return redirect(f"/users/{g.user.id}/following")
+    return redirect(url_for('users_followers', user_id=g.user.id))
 
 
 @app.route('/users/profile', methods=["GET", "POST"])
@@ -249,7 +249,7 @@ def delete_user():
     db.session.delete(g.user)
     db.session.commit()
 
-    return redirect("/signup")
+    return redirect(url_for('signup'))
 
 
 @app.route('/like/<int:msg_id>', methods=["POST"])
