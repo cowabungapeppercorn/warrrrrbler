@@ -128,10 +128,13 @@ def list_users():
     """
 
     search = request.args.get('q')
+
     if not search:
         users = User.query.all()
+        print("USERS ----------->", users)
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
+        print("USERS ----------->", users)
 
     return render_template('users/index.html', users=users)
 
