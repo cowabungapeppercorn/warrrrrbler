@@ -133,7 +133,7 @@ def list_users():
         users = User.query.all()
         print("USER 1 ------>", users[0])
         print("USER 1 BIO -->", users[0].bio)
-        print("USER 1 BIO LEN -->", license(users[0].bio))
+        print("USER 1 BIO LEN -->", len(users[0].bio))
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
         print("USERS ----------->", users)
