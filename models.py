@@ -152,5 +152,5 @@ class Like(db.Model):
     __tablename__ = 'likes'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="cascade"))
-    message_id = db.Column(db.Integer, db.ForeignKey('messages.id', ondelete="cascade"))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete="CASCADE"))
+    message_id = db.Column(db.Integer, db.ForeignKey('messages.id', ondelete="CASCADE"))
