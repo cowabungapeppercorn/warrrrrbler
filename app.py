@@ -131,7 +131,8 @@ def list_users():
 
     if not search:
         users = User.query.all()
-        print("USERS ----------->", users)
+        print("USER 1 ------>", users[0])
+        print("USER 1 BIO -->", users[0].bio)
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
         print("USERS ----------->", users)
