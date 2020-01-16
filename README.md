@@ -14,7 +14,7 @@ See a live demo here: https://warrrrrbler.herokuapp.com/
 
 To clone the repository, run the following command in your terminal: 
 ```
-git clone https://github.com/cowabungapeppercorn/warbler.git
+git clone https://github.com/cowabungapeppercorn/warbler
 ```
 
 Create a virtual environment - I use [virtualenv](https://virtualenv.pypa.io/) and install the requirements from:
