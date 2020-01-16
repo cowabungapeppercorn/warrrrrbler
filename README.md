@@ -1,6 +1,6 @@
 # Warrrrrbler
 
-Warrrrrbler is a twitter clone written in Python using Flask as a framework. Users can signup/login, follow other users, be followed by other users, and warrrrrble to their heart's content (aka tweet). 
+Warrrrrbler is a twitter clone written in Python using Flask as a framework. Users can signup and login, follow other users, be followed by other users, and warrrrrble to their heart's content (aka tweet). 
 
   - User authentication and authorization is done with **bcrypt**.
   - **Sessions** are used to store current user information.
@@ -14,7 +14,7 @@ See a live demo here: https://warrrrrbler.herokuapp.com/
 
 To clone the repository, run the following command in your terminal: 
 ```
-git clone https://github.com/KatieJessupMcd/warbler.git
+git clone https://github.com/cowabungapeppercorn/warbler.git
 ```
 
 Create a virtual environment - I use [virtualenv](https://virtualenv.pypa.io/) and install the requirements from:
