@@ -2,11 +2,11 @@
 
 Warrrrrbler is a twitter clone written in Python using Flask as a framework. Users can signup/login, follow other users, be followed by other users, and warrrrrble to their heart's content (aka tweet). 
 
-  - User authentication and authorization is done with *bcrypt*.
-  - *Sessions* are used to store current user information.
-  - *Jinja2* is used as the templating system.
-  - The database is *PostgreSQL*.
-  - Tests are written for the views and models using the *unittest* module. 
+  - User authentication and authorization is done with **bcrypt**.
+  - **Sessions** are used to store current user information.
+  - **Jinja2** is used as the templating system.
+  - The database is **PostgreSQL**.
+  - Tests are written for the views and models using the **unittest** module. 
 
 See a live demo here: https://warrrrrbler.herokuapp.com/
 
